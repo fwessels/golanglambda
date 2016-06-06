@@ -32,9 +32,12 @@ For now we need to patch the AWS Javascript SDK to use a `fetch` object instead 
 
 ```
 $ cd node_modules/aws-sdk/lib/http
+$ rm xhr.js
 $ wget https://raw.githubusercontent.com/fwessels/aws-sdk-js/324d927a278a551264f0d6c2078d852bb7ed2416/lib/http/xhr.js
 ```
 
+Browsify a script
+-----------------
 
 After this you can use browserify to prepare your script for running by golanglambda, and we need to make one more modification to prevent an 'old browser' warning (still to be fixed).
 
@@ -42,11 +45,12 @@ After this you can use browserify to prepare your script for running by golangla
 $ browserify sample_s3.js | sed 's/= oldBrowser$/= function\(size, cb\) \{ return new Buffer\(size\) \}/' > sample_s3-browserified.js
 ```
 
-Example
--------
+Run the example
+---------------
 
 After this you can run your sample:
 
 ```
 $ golanglambda sample-s3-browserified.js
+Successfully uploaded data to golanglambda-sample-00000000-0000-4000-8000-000000000000/hello_world.txt
 ```
