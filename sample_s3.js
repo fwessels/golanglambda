@@ -16,6 +16,7 @@
 
 // Load the SDK and UUID
 var AWS = require('aws-sdk');
+var uuid = require('node-uuid');
 
 AWS.config.update({accessKeyId: 'ACCESSKEY', secretAccessKey: 'SECRETKEY'});
 AWS.config.update({region: 'REGION'});
