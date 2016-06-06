@@ -144,13 +144,22 @@ func (self *_parser) parseRegExpLiteral() *ast.RegExpLiteral {
 	var value string
 	// TODO 15.10
 	{
-		_, err = regexp2.Compile(pattern, 0)
+		pattern, err := TransformRegExp(pattern)
 		if err != nil {
-			// We should not get here, ParseRegExp should catch any errors
-			self.error(idx, "Invalid regular expression: %s", err.Error()[22:]) // Skip redundant "parse regexp error"
+			if pattern == "" || self.mode&IgnoreRegExpErrors == 0 {
+				self.error(idx, "Invalid regular expression: %s", err.Error())
+			}
 		} else {
-			value = pattern
+			_, err = regexp2.Compile(pattern, 0)
+			if err != nil {
+				// We should not get here, ParseRegExp should catch any errors
+				self.error(idx, "Invalid regular expression: %s", err.Error()[22:]) // Skip redundant "parse regexp error"
+			} else {
+				value = pattern
+			}
+
 		}
+
 	}
 
 	literal := self.str[offset:endOffset]

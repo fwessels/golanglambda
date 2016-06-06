@@ -3,6 +3,9 @@ package otto
 import (
 	"github.com/dlclark/regexp2"
 	"unicode/utf8"
+	"fmt"
+
+	"github.com/robertkrimen/otto/parser"
 )
 
 type _regExp2Object struct {
@@ -21,10 +24,41 @@ func (runtime *_runtime) newRegExp2Object(pattern string, flags string) *_object
 	global := false
 	ignoreCase := false
 	multiline := false
+	re2flags := ""
 
-	// TODO Pass in flags properly
+	// TODO Maybe clean up the panicking here... TypeError, SyntaxError, ?
 
-	regularExpression, err := regexp2.Compile(pattern, 0)
+	for _, chr := range flags {
+		switch chr {
+		case 'g':
+			if global {
+				panic(runtime.panicSyntaxError("newRegExpObject: %s %s", pattern, flags))
+			}
+			global = true
+		case 'm':
+			if multiline {
+				panic(runtime.panicSyntaxError("newRegExpObject: %s %s", pattern, flags))
+			}
+			multiline = true
+			re2flags += "m"
+		case 'i':
+			if ignoreCase {
+				panic(runtime.panicSyntaxError("newRegExpObject: %s %s", pattern, flags))
+			}
+			ignoreCase = true
+			re2flags += "i"
+		}
+	}
+
+	re2pattern, err := parser.TransformRegExp(pattern)
+	if err != nil {
+		panic(runtime.panicTypeError("Invalid regular expression: %s", err.Error()))
+	}
+	if len(re2flags) > 0 {
+		re2pattern = fmt.Sprintf("(?%s:%s)", re2flags, re2pattern)
+	}
+
+	regularExpression, err := regexp2.Compile(re2pattern, 0)
 	if err != nil {
 		panic(runtime.panicSyntaxError("Invalid regular expression 1: %s", err.Error()[22:]))
 	}
